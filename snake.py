@@ -1,163 +1,97 @@
-#imports
-import turtle
-import time
+from tkinter import *
 import random
 
-delay = 0.1
+GAME_WIDTH = 700
+GAME_HEIGHT = 700
+SPEED = 50
+SPACE_SIZE = 50
+BODY_PARTS = 3
+SNAKE_COLOR = "#00FF00"
+FOOD_COLOR = "#FF0000"
+BACKGROUND_COLOR = "#000000"
 
-#scores
+
+class Snake:
+    def __init__(self):
+        self.body_size = BODY_PARTS
+        self.coordinates = []
+        self.squares = []
+
+        for i in range(0, BODY_PARTS):
+            self.coordinates.append([0, 0])
+
+        for x, y in self.coordinates:
+            square = canvas.create_rectangle(
+                x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill=SNAKE_COLOR, tag="snake"
+            )
+            self.squares.append(square)
+
+
+class Food:
+    def __init__(self):
+        x = random.randint(0, (GAME_WIDTH / SPACE_SIZE) - 1) * SPACE_SIZE
+        y = random.randint(0, (GAME_HEIGHT / SPACE_SIZE) - 1) * SPACE_SIZE
+
+        self.coordinates = [x, y]
+
+        canvas.create_oval(
+            x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill=FOOD_COLOR, tag="food"
+        )
+
+
+def next_turn(snake, food):
+    x, y = snake.coordinates[0]
+
+    if direction == "up":
+        y -= SPACE_SIZE
+    elif direction == "down":
+        y += SPACE_SIZE
+    elif direction == "left":
+        x -= SPACE_SIZE
+    elif direction == "right":
+        x += SPACE_SIZE
+
+    window.after(SPEED, next_turn, snake, food)
+
+
+def change_direction(new_direction):
+    pass
+
+
+def check_collisions():
+    pass
+
+
+def game_over():
+    pass
+
+
+window = Tk()
+window.title("Snake Game")
+window.resizable(False, False)
+
+
 score = 0
-high_score = 0
+direction = "down"
 
-#set up screen
-wn = turtle.Screen()
-wn.title("Snake Game")
-wn.bgcolor('yellow')
-wn.setup(width=600, height=600)
-wn.tracer(0)
+label = Label(window, text="Score:{}".format(score), font=("consoles", 40))
+label.pack()
 
-#snake head
-head = turtle.Turtle()
-head.speed(0)
-head.shape("square")
-head.color("black")
-head.penup()
-head.goto(0,0)
-head.direction = "stop"
+canvas = Canvas(window, bg=BACKGROUND_COLOR, height=GAME_HEIGHT, width=GAME_WIDTH)
+canvas.pack()
 
-#snake food
-food= turtle.Turtle()
-food.speed(0)
-food.shape("square")
-food.color("red")
-food.penup()
-food.goto(0,100)
+window.update()
 
-segments = []
+window_width = window.winfo_width()
+window_height = window.winfo_height()
+screen_width = window.winfo_screenwidth()
+screen_height = window.winfo_screenheight()
 
-#scoreboards
-sc = turtle.Turtle()
-sc.speed(0)
-sc.shape("square")
-sc.color("black")
-sc.penup()
-sc.hideturtle()
-sc.goto(0,260)
-sc.write("score: 0  High score: 0", align = "center", font=("ds-digital", 24, "normal"))
+x = int((screen_width / 2) - (window_width / 2))
+y = int((screen_height / 2) - (window_height / 2))
+window.geometry("%dx%d+%d+%d" % (window_width, window_height, x, y))
 
-#Functions
-def go_up():
-    if head.direction != "down":
-        head.direction = "up"
-def go_down():
-    if head.direction != "up":
-        head.direction = "down"
-def go_left():
-    if head.direction != "right":
-        head.direction = "left"
-def go_right():
-    if head.direction != "left":
-        head.direction = "right"
-def move():
-    if head.direction == "up":
-        y = head.ycor()
-        head.sety(y+20)
-    if head.direction == "down":
-        y = head.ycor()
-        head.sety(y-20)
-    if head.direction == "left":
-        x = head.xcor()
-        head.setx(x-20)
-    if head.direction == "right":
-        x = head.xcor()
-        head.setx(x+20)
+snake = Snake()
+food = Food()
 
-#keyboard bindings
-wn.listen()
-wn.onkeypress(go_up, "Up")
-wn.onkeypress(go_down, "Down")
-wn.onkeypress(go_left, "Left")
-wn.onkeypress(go_right, "Right")
-
-#MainLoop
-while True:
-    wn.update()
-
-    #check collision with border area
-    if head.xcor()>290 or head.xcor()<-290 or head.ycor()>290 or head.ycor()<-290:
-        time.sleep(1)
-        head.goto(0,0)
-        head.direction = "stop"
-
-        #hide the segments of body
-        for segment in segments:
-            segment.goto(1000,1000) #out of range
-        #clear the segments
-        segments.clear()
-
-        #reset score
-        score = 0
-
-        #reset delay
-        delay = 0.1
-
-        sc.clear()
-        sc.write("score: {}  High score: {}".format(score, high_score), align="center", font=("ds-digital", 24, "normal"))
-
-    #check collision with food
-    if head.distance(food) <20:
-        # move the food to random place
-        x = random.randint(-290,290)
-        y = random.randint(-290,290)
-        food.goto(x,y)
-
-        #add a new segment to the head
-        new_segment = turtle.Turtle()
-        new_segment.speed(0)
-        new_segment.shape("square")
-        new_segment.color("black")
-        new_segment.penup()
-        segments.append(new_segment)
-
-        #shorten the delay
-        delay -= 0.001
-        #increase the score
-        score += 10
-
-        if score > high_score:
-            high_score = score
-        sc.clear()
-        sc.write("score: {}  High score: {}".format(score,high_score), align="center", font=("ds-digital", 24, "normal")) 
-
-    #move the segments in reverse order
-    for index in range(len(segments)-1,0,-1):
-        x = segments[index-1].xcor()
-        y = segments[index-1].ycor()
-        segments[index].goto(x,y)
-    #move segment 0 to head
-    if len(segments)>0:
-        x = head.xcor()
-        y = head.ycor()
-        segments[0].goto(x,y)
-
-    move()
-
-    #check for collision with body
-    for segment in segments:
-        if segment.distance(head)<20:
-            time.sleep(1)
-            head.goto(0,0)
-            head.direction = "stop"
-
-            #hide segments
-            for segment in segments:
-                segment.goto(1000,1000)
-            segments.clear()
-            score = 0
-            delay = 0.1
-
-            #update the score     
-            sc.clear()
-            sc.write("score: {}  High score: {}".format(score,high_score), align="center", font=("ds-digital", 24, "normal"))
-    time.sleep(delay)
-wn.mainloop()   
+window.mainloop()
